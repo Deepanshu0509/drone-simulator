@@ -169,7 +169,7 @@ const MapComponent = ({ datasets }) => {
                 }}
                 paint={{
                     'line-color': '#0096FF',
-                    'line-width': 5
+                    'line-width': 3
                 }}
                 />
             </Source>
