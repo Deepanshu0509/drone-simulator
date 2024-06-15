@@ -1,0 +1,21 @@
+import React from 'react';
+
+const About = () => {
+  return (
+    <div className="container mx-auto p-8">
+      <h1 className="text-3xl font-bold mb-4">About Drone Simulator</h1>
+      <p className="text-lg mb-4">
+        The Drone Simulator is a web application that allows users to simulate drone movements on a map.
+        You can upload CSV files containing coordinates and simulate the movement of multiple drones in parallel.
+      </p>
+      <h2 className="text-2xl font-bold mb-4">About the Owner</h2>
+      <p className="text-lg mb-4">
+        Hi, I'm Deepanshu Kewalramani, the creator of the Drone Simulator. I have a passion for technology and
+        have been working on various projects in web development and drone technology. This project
+        is a culmination of my interests in mapping, simulations, and user experience design.
+      </p>
+    </div>
+  );
+};
+
+export default About;
