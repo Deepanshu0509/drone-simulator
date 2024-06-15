@@ -9,7 +9,7 @@ const Navbar = () => {
         </div>
         <div className="flex space-x-4">
           <a href="/about" className="text-white hover:text-gray-200">About</a>
-          <a href="#contact" className="text-white hover:text-gray-200">Contact</a>
+          <a href="/contact" className="text-white hover:text-gray-200">Contact</a>
         </div>
       </div>
     </nav>
