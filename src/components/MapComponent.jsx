@@ -25,6 +25,11 @@ const MapComponent = ({ datasets }) => {
   const [currentIndices, setCurrentIndices] = useState(datasets.map(() => 0));
   // State to manage interval IDs for each dataset
   const [intervalIds, setIntervalIds] = useState(datasets.map(() => null));
+  // State to manage current time steps for each dataset
+  const [currentTimeSteps, setCurrentTimeSteps] = useState(datasets.map(dataset => ({
+    value: 0,  // Initial value of the slider
+    max: dataset.length - 1  // Maximum value should be the length of the dataset
+  })));
 
   const onStartSimulate = (index) => {
     setIsSimulating(prevState => prevState.map((state, i) => i === index ? true : state));
@@ -40,8 +45,6 @@ const MapComponent = ({ datasets }) => {
     }
 
     const id = setInterval(() => {
-        console.log('index', index)
-        console.log('current positions : ', currentPositions)
       setCurrentIndices(prevIndices => {
         const newIndices = [...prevIndices];
         if (newIndices[index] < datasets[index].length) {
@@ -57,6 +60,12 @@ const MapComponent = ({ datasets }) => {
             const newPositions = [...prevPositions];
             newPositions[index] = { latitude, longitude };
             return newPositions;
+          });
+
+          setCurrentTimeSteps(prevSteps => {
+            const newSteps = [...prevSteps];
+            newSteps[index] = { ...newSteps[index], value: newIndices[index] };
+            return newSteps;
           });
 
           newIndices[index] += 1;
@@ -75,6 +84,42 @@ const MapComponent = ({ datasets }) => {
     });
   };
 
+  const handleSeekBarChange = (index, value) => {
+    value = parseInt(value, 10); // Ensure value is parsed as integer
+
+    setCurrentTimeSteps(prevSteps => {
+      const newSteps = [...prevSteps];
+      newSteps[index] = { ...newSteps[index], value };
+      return newSteps;
+    });
+
+    // Update currentIndices to the slider value
+    setCurrentIndices(prevIndices => {
+      const newIndices = [...prevIndices];
+      newIndices[index] = value;
+      return newIndices;
+    });
+
+    // Synchronize the current position and path with the selected time step
+    if (value < datasets[index].length) {
+      const { latitude, longitude } = datasets[index][value];
+      setPaths(prevPaths => {
+        const newPaths = [...prevPaths];
+        newPaths[index] = [...newPaths[index], [longitude, latitude]];
+        return newPaths;
+      });
+      setCurrentPositions(prevPositions => {
+        const newPositions = [...prevPositions];
+        newPositions[index] = { latitude, longitude };
+        return newPositions;
+      });
+    }
+
+    // Pause simulation when seeking manually
+    setIsSimulating(prevState => prevState.map(() => false));
+    intervalIds.forEach(id => clearInterval(id));
+  };
+
   useEffect(() => {
     isSimulating.forEach((simulating, index) => {
       if (simulating) {
@@ -87,7 +132,7 @@ const MapComponent = ({ datasets }) => {
     return () => {
       intervalIds.forEach(id => clearInterval(id));
     };
-  }, [isSimulating]);
+  }, [isSimulating, datasets, currentIndices]);
 
   return (
     <ReactMapGL
@@ -129,12 +174,14 @@ const MapComponent = ({ datasets }) => {
                 />
             </Source>
 
-            <div style={{ position: 'absolute', left: 10, top: 60 * index + 10 }}>
-                <SimulatePauseButton
+            <div style={{ position: 'absolute', left: 10, top: 70 * index + 10 }}>
+              <SimulatePauseButton
                 isSimulating={isSimulating[index]}
                 onStartSimulate={() => onStartSimulate(index)}
                 onPauseSimulate={() => onPauseSimulate(index)}
-                />
+                currentTimeStep={currentTimeSteps[index]}
+                handleSeekBarChange={(value) => handleSeekBarChange(index, value)}
+              />
             </div>
             </React.Fragment>
         ))}
