@@ -4,9 +4,11 @@ import SimulatePauseButton from './SimulatePauseButton';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 const MapComponent = ({ datasets }) => {
+    const initialLatitude = datasets.length > 0 && datasets[0].length > 0 ? datasets[0][0].latitude : 26.4779;
+    const initialLongitude = datasets.length > 0 && datasets[0].length > 0 ? datasets[0][0].longitude : 73.1165;
     const [viewState, setViewState] = useState({
-    latitude: 51.5074,
-    longitude: -0.1278    ,
+    latitude: initialLatitude,
+    longitude: initialLongitude,
     zoom: 10,
     width: '100%',
     height: '600px'
@@ -148,7 +150,10 @@ const MapComponent = ({ datasets }) => {
             <React.Fragment key={index}>
             {currentPositions[index] && (
                 <Marker latitude={currentPositions[index].latitude} longitude={currentPositions[index].longitude}>
-                    <div style={{ fontSize: '30px' }}>🛸</div>
+                    <div className='flex flex-col justify-center items-center'>
+                      <div className='text-violet-700 font-bold -mb-2 text-xl'>Drone {index + 1}</div>
+                      <div className='text-3xl'>🛸</div>
+                    </div>
                 </Marker>
             )}
 
@@ -181,6 +186,7 @@ const MapComponent = ({ datasets }) => {
                 onPauseSimulate={() => onPauseSimulate(index)}
                 currentTimeStep={currentTimeSteps[index]}
                 handleSeekBarChange={(value) => handleSeekBarChange(index, value)}
+                index={index}
               />
             </div>
             </React.Fragment>
