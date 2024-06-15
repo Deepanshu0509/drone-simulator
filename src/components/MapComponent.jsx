@@ -3,55 +3,92 @@ import ReactMapGL, { Marker, NavigationControl, Source, Layer } from 'react-map-
 import SimulatePauseButton from './SimulatePauseButton';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
-const MapComponent = ({ data }) => {
+const MapComponent = ({ datasets }) => {
     const [viewState, setViewState] = useState({
-    latitude: data.length > 0 ? data[0].latitude : 37.7749, // Default to San Francisco coordinates if data is empty
-    longitude: data.length > 0 ? data[0].longitude : -122.4194,
-    zoom: 15,
+    latitude: 51.5074,
+    longitude: -0.1278    ,
+    zoom: 10,
     width: '100%',
     height: '600px'
   });
 
-  const [path, setPath] = useState([]);
-  const [currentPosition, setCurrentPosition] = useState(data.length > 0 ? { latitude: data[0]?.latitude, longitude: data[0]?.longitude } : null);
-  const [isSimulating, setIsSimulating] = useState(false);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [intervalId, setIntervalId] = useState(null);
+  // State to manage all paths for each dataset
+  const [paths, setPaths] = useState(datasets.map(() => []));
+  // State to manage current positions of drones for each dataset
+  const [currentPositions, setCurrentPositions] = useState(datasets.map(dataset => ({
+    latitude: dataset.length > 0 ? dataset[0]?.latitude : 37.7749,
+    longitude: dataset.length > 0 ? dataset[0]?.longitude : -122.4194
+  })));
+  // State to manage simulation state for each dataset
+  const [isSimulating, setIsSimulating] = useState(datasets.map(() => false));
+  // State to manage current indices for each dataset
+  const [currentIndices, setCurrentIndices] = useState(datasets.map(() => 0));
+  // State to manage interval IDs for each dataset
+  const [intervalIds, setIntervalIds] = useState(datasets.map(() => null));
 
-  useEffect(() => {
-    if (isSimulating) {
-      if (intervalId) {
-        clearInterval(intervalId); // Clear previous interval if exists
-      }
-      
-      const id = setInterval(() => {
-        if (currentIndex < data.length) {
-          const { latitude, longitude } = data[currentIndex];
-          setPath(prevPath => [...prevPath, [longitude, latitude]]);
-          setCurrentPosition({ latitude, longitude });
-          setCurrentIndex(prevIndex => prevIndex + 1);
-        } else {
-          clearInterval(id);
-          setIsSimulating(false);
-        }
-      }, 1000);
+  const onStartSimulate = (index) => {
+    setIsSimulating(prevState => prevState.map((state, i) => i === index ? true : state));
+  };
 
-      setIntervalId(id);
-    } else {
-      clearInterval(intervalId);
+  const onPauseSimulate = (index) => {
+    setIsSimulating(prevState => prevState.map((state, i) => i === index ? false : state));
+  };
+
+  const simulateMovement = (index) => {
+    if (intervalIds[index]) {
+      clearInterval(intervalIds[index]);
     }
 
-    return () => clearInterval(intervalId);
-  }, [isSimulating, data, currentIndex]);
+    const id = setInterval(() => {
+        console.log('index', index)
+        console.log('current positions : ', currentPositions)
+      setCurrentIndices(prevIndices => {
+        const newIndices = [...prevIndices];
+        if (newIndices[index] < datasets[index].length) {
+          const { latitude, longitude } = datasets[index][newIndices[index]];
 
-  const onStartSimulate = () => {
-    setIsSimulating(true);
+          setPaths(prevPaths => {
+            const newPaths = [...prevPaths];
+            newPaths[index] = [...newPaths[index], [longitude, latitude]];
+            return newPaths;
+          });
+
+          setCurrentPositions(prevPositions => {
+            const newPositions = [...prevPositions];
+            newPositions[index] = { latitude, longitude };
+            return newPositions;
+          });
+
+          newIndices[index] += 1;
+        } else {
+          clearInterval(id);
+          setIsSimulating(prevState => prevState.map((state, i) => i === index ? false : state));
+        }
+        return newIndices;
+      });
+    }, 1000);
+
+    setIntervalIds(prevIds => {
+      const newIds = [...prevIds];
+      newIds[index] = id;
+      return newIds;
+    });
   };
 
-  const onPauseSimulate = () => {
-    setIsSimulating(false);
-  };
-  
+  useEffect(() => {
+    isSimulating.forEach((simulating, index) => {
+      if (simulating) {
+        simulateMovement(index);
+      } else {
+        clearInterval(intervalIds[index]);
+      }
+    });
+
+    return () => {
+      intervalIds.forEach(id => clearInterval(id));
+    };
+  }, [isSimulating]);
+
   return (
     <ReactMapGL
         {...viewState}
@@ -61,41 +98,46 @@ const MapComponent = ({ data }) => {
         onMove={evt => setViewState(evt.viewState)}
         >  
 
-        {currentPosition && (
-            <Marker latitude={currentPosition.latitude} longitude={currentPosition.longitude}>
-            <div style={{ fontSize: '30px' }}>🛸</div>
-            </Marker>
-        )} 
 
-      <Source id="dronePath" type="geojson" data={{
-        type: 'Feature',
-        geometry: {
-          type: 'LineString',
-          coordinates: path
-        }
-      }}>
-        <Layer
-          id="dronePath"
-          type="line"
-          source="dronePath"
-          layout={{
-            'line-join': 'round',
-            'line-cap': 'round'
-          }}
-          paint={{
-            'line-color': '#0096FF',
-            'line-width': 5
-          }}
-        />
-      </Source>
+        {datasets.map((dataset, index) => (
+            <React.Fragment key={index}>
+            {currentPositions[index] && (
+                <Marker latitude={currentPositions[index].latitude} longitude={currentPositions[index].longitude}>
+                    <div style={{ fontSize: '30px' }}>🛸</div>
+                </Marker>
+            )}
 
-      <div style={{ position: 'absolute', left: 10, top: 10 }}>
-        <SimulatePauseButton
-          isSimulating={isSimulating}
-          onStartSimulate={onStartSimulate}
-          onPauseSimulate={onPauseSimulate}
-        />
-      </div>
+            <Source id={`dronePath-${index}`} type="geojson" data={{
+                type: 'Feature',
+                geometry: {
+                type: 'LineString',
+                coordinates: paths[index]
+                }
+            }}>
+                <Layer
+                id={`dronePath-${index}`}
+                type="line"
+                source={`dronePath-${index}`}
+                layout={{
+                    'line-join': 'round',
+                    'line-cap': 'round'
+                }}
+                paint={{
+                    'line-color': '#0096FF',
+                    'line-width': 5
+                }}
+                />
+            </Source>
+
+            <div style={{ position: 'absolute', left: 10, top: 60 * index + 10 }}>
+                <SimulatePauseButton
+                isSimulating={isSimulating[index]}
+                onStartSimulate={() => onStartSimulate(index)}
+                onPauseSimulate={() => onPauseSimulate(index)}
+                />
+            </div>
+            </React.Fragment>
+        ))}
 
       <div style={{ position: 'absolute', right: 10, top: 50 }}>
         <NavigationControl />

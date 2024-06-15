@@ -1,51 +1,65 @@
 import React, { useState } from 'react';
 import Papa from 'papaparse';
 
-const CSVInput = ({ setData }) => {
-  const [file, setFile] = useState(null);
-  const [error, setError] = useState(null);
+const CSVInput = ({ addDataset }) => {
+  const [files, setFiles] = useState([]);
+  const [errors, setErrors] = useState([]);
 
   const handleFileChange = (event) => {
-    const selectedFile = event.target.files[0];
-    if (selectedFile && selectedFile.type === 'text/csv') {
-      setFile(selectedFile);
-      setError(null); // Clear previous errors
-    } else {
-      alert('Please select a CSV file');
-    }
+    const selectedFiles = Array.from(event.target.files);
+
+    // Filter out non-CSV files
+    const csvFiles = selectedFiles.filter(file => file.type === 'text/csv');
+
+    // Clear previous errors
+    setErrors([]);
+
+    // Update state with selected CSV files
+    setFiles(csvFiles);
   };
 
   const handleUpload = () => {
-    if (file) {
-      Papa.parse(file, {
-        header: true,
-        skipEmptyLines: true,
-        complete: (result) => {
-          const headers = result.meta.fields;
-          const requiredColumns = ['timestamp', 'latitude', 'longitude'];
-          const missingColumns = requiredColumns.filter(column => !headers.includes(column));
+    // Reset errors
+    setErrors([]);
 
-          if (missingColumns.length > 0) {
-            setError(`Missing required columns: ${missingColumns.join(', ')}`);
-            setData([]);
-          } else {
-            const parsedData = result.data.map(row => ({
-              timestamp: row.timestamp,
-              latitude: parseFloat(row.latitude),
-              longitude: parseFloat(row.longitude)
-            }));
-            setData(parsedData);
-            setError(null); // Clear any previous errors
+    // Process each selected file
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const csvData = event.target.result;
+
+        // Parse CSV data using PapaParse
+        Papa.parse(csvData, {
+          header: true,
+          skipEmptyLines: true,
+          complete: (result) => {
+            const headers = result.meta.fields;
+            const requiredColumns = ['timestamp', 'latitude', 'longitude'];
+            const missingColumns = requiredColumns.filter(column => !headers.includes(column));
+
+            if (missingColumns.length > 0) {
+              setErrors(prevErrors => [...prevErrors, `File ${file.name}: Missing required columns: ${missingColumns.join(', ')}`]);
+            } else {
+              const parsedData = result.data.map(row => ({
+                timestamp: row.timestamp,
+                latitude: parseFloat(row.latitude),
+                longitude: parseFloat(row.longitude)
+              }));
+
+              // Add new dataset to parent component using addDataset prop
+              addDataset(parsedData);
+            }
+          },
+          error: (error) => {
+            console.error('Error parsing CSV:', error);
+            setErrors(prevErrors => [...prevErrors, `Error parsing ${file.name}: ${error.message}`]);
           }
-        },
-        error: (error) => {
-          console.error('Error parsing CSV:', error);
-          setError('Error parsing CSV file.');
-        }
-      });
-    } else {
-      alert('No file selected');
-    }
+        });
+      };
+
+      // Read the file as text
+      reader.readAsText(file);
+    });
   };
 
   return (
@@ -53,6 +67,7 @@ const CSVInput = ({ setData }) => {
       <input
         type="file"
         accept=".csv"
+        multiple
         onChange={handleFileChange}
         className="mb-4 p-2 border border-gray-300 rounded-md"
       />
@@ -62,9 +77,13 @@ const CSVInput = ({ setData }) => {
       >
         Upload
       </button>
-      {error && (
+      {errors.length > 0 && (
         <div className="mt-4 p-2 bg-red-100 text-red-800 rounded-md">
-          {error}
+          <ul className="list-disc pl-4">
+            {errors.map((error, index) => (
+              <li key={index}>{error}</li>
+            ))}
+          </ul>
         </div>
       )}
     </div>
