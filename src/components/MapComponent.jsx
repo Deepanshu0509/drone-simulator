@@ -30,7 +30,7 @@ const MapComponent = ({ datasets }) => {
   // State to manage current time steps for each dataset
   const [currentTimeSteps, setCurrentTimeSteps] = useState(datasets.map(dataset => ({
     value: 0,  // Initial value of the slider
-    max: dataset.length - 1  // Maximum value should be the length of the dataset
+    max: dataset.length  // Maximum value should be the length of the dataset
   })));
 
   const onStartSimulate = (index) => {
@@ -184,7 +184,7 @@ const MapComponent = ({ datasets }) => {
                 isSimulating={isSimulating[index]}
                 onStartSimulate={() => onStartSimulate(index)}
                 onPauseSimulate={() => onPauseSimulate(index)}
-                currentTimeStep={currentTimeSteps[index]}
+                currentTimeStep={currentTimeSteps[index] || { value: 0, max: dataset.length }}
                 handleSeekBarChange={(value) => handleSeekBarChange(index, value)}
                 index={index}
               />
