@@ -64,14 +64,14 @@ const CSVInput = ({ addDataset }) => {
   };
 
   return (
-    <div className="flex flex-col items-center p-6 bg-gray-100 rounded-lg shadow-md relative">
+    <div className="flex flex-col items-center p-6 mt-32 bg-gray-100 rounded-lg shadow-md">
       <div className="flex items-center mb-4">
         <input
           type="file"
           accept=".csv"
           multiple
           onChange={handleFileChange}
-          className="p-2 border border-gray-300 rounded-md"
+          className="p-2 border border-gray-300 rounded-md xsm:w-52 sm:w-80"
         />
         <div className="ml-2 relative flex items-center">
           <span

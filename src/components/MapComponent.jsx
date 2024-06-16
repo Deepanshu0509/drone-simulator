@@ -137,10 +137,11 @@ const MapComponent = ({ datasets }) => {
   }, [isSimulating, datasets, currentIndices]);
 
   return (
+    <div className="w-[100vw] h-[90vh]">
     <ReactMapGL
         {...viewState}
         mapboxAccessToken={process.env.REACT_APP_MAPBOX_TOKEN}
-        style={{width: 1200, height: 600}}
+        style={{ width: '100%', height: '100%' }}
         mapStyle="mapbox://styles/mapbox/streets-v9"
         onMove={evt => setViewState(evt.viewState)}
         >  
@@ -196,6 +197,7 @@ const MapComponent = ({ datasets }) => {
         <NavigationControl />
       </div>
     </ReactMapGL>
+    </div>
   );
 };
 
