@@ -14,23 +14,17 @@ const MapComponent = ({ datasets }) => {
     height: '600px'
   });
 
-  // State to manage all paths for each dataset
   const [paths, setPaths] = useState(datasets.map(() => []));
-  // State to manage current positions of drones for each dataset
   const [currentPositions, setCurrentPositions] = useState(datasets.map(dataset => ({
     latitude: dataset.length > 0 ? dataset[0]?.latitude : 37.7749,
     longitude: dataset.length > 0 ? dataset[0]?.longitude : -122.4194
   })));
-  // State to manage simulation state for each dataset
   const [isSimulating, setIsSimulating] = useState(datasets.map(() => false));
-  // State to manage current indices for each dataset
   const [currentIndices, setCurrentIndices] = useState(datasets.map(() => 0));
-  // State to manage interval IDs for each dataset
   const [intervalIds, setIntervalIds] = useState(datasets.map(() => null));
-  // State to manage current time steps for each dataset
   const [currentTimeSteps, setCurrentTimeSteps] = useState(datasets.map(dataset => ({
-    value: 0,  // Initial value of the slider
-    max: dataset.length  // Maximum value should be the length of the dataset
+    value: 0, 
+    max: dataset.length
   })));
 
   const onStartSimulate = (index) => {
@@ -87,7 +81,7 @@ const MapComponent = ({ datasets }) => {
   };
 
   const handleSeekBarChange = (index, value) => {
-    value = parseInt(value, 10); // Ensure value is parsed as integer
+    value = parseInt(value, 10); 
 
     setCurrentTimeSteps(prevSteps => {
       const newSteps = [...prevSteps];
@@ -95,14 +89,12 @@ const MapComponent = ({ datasets }) => {
       return newSteps;
     });
 
-    // Update currentIndices to the slider value
     setCurrentIndices(prevIndices => {
       const newIndices = [...prevIndices];
       newIndices[index] = value;
       return newIndices;
     });
 
-    // Synchronize the current position and path with the selected time step
     if (value < datasets[index].length) {
       const { latitude, longitude } = datasets[index][value];
       setPaths(prevPaths => {
@@ -117,7 +109,6 @@ const MapComponent = ({ datasets }) => {
       });
     }
 
-    // Pause simulation when seeking manually
     setIsSimulating(prevState => prevState.map(() => false));
     intervalIds.forEach(id => clearInterval(id));
   };
