@@ -16,13 +16,13 @@ const App = () => {
 
   return (
     <Router>
-      <div className="min-h-screen bg-gray-200">
+      <div className="min-h-screen bg-gray-200 flex flex-col">
         <Navbar />
         <Routes>
           <Route
             path="/"
             element={
-              <div className="flex flex-col items-center pt-8">
+              <div className="flex flex-col items-center h-full">
                 {datasets.length === 0 ? (
                   <CSVInput addDataset={addDataset} />
                 ) : (

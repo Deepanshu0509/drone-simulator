@@ -8,28 +8,19 @@ const CSVInput = ({ addDataset }) => {
 
   const handleFileChange = (event) => {
     const selectedFiles = Array.from(event.target.files);
-
-    // Filter out non-CSV files
     const csvFiles = selectedFiles.filter(file => file.type === 'text/csv');
-
-    // Clear previous errors
     setErrors([]);
-
-    // Update state with selected CSV files
     setFiles(csvFiles);
   };
 
   const handleUpload = () => {
-    // Reset errors
     setErrors([]);
 
-    // Process each selected file
     files.forEach(file => {
       const reader = new FileReader();
       reader.onload = (event) => {
         const csvData = event.target.result;
 
-        // Parse CSV data using PapaParse
         Papa.parse(csvData, {
           header: true,
           skipEmptyLines: true,
@@ -47,7 +38,6 @@ const CSVInput = ({ addDataset }) => {
                 longitude: parseFloat(row.longitude)
               }));
 
-              // Add new dataset to parent component using addDataset prop
               addDataset(parsedData);
             }
           },
@@ -58,20 +48,19 @@ const CSVInput = ({ addDataset }) => {
         });
       };
 
-      // Read the file as text
       reader.readAsText(file);
     });
   };
 
   return (
-    <div className="flex flex-col items-center p-6 bg-gray-100 rounded-lg shadow-md relative">
+    <div className="flex flex-col items-center p-6 mt-32 bg-gray-100 rounded-lg shadow-md">
       <div className="flex items-center mb-4">
         <input
           type="file"
           accept=".csv"
           multiple
           onChange={handleFileChange}
-          className="p-2 border border-gray-300 rounded-md"
+          className="p-2 border border-gray-300 rounded-md xsm:w-52 sm:w-80"
         />
         <div className="ml-2 relative flex items-center">
           <span
