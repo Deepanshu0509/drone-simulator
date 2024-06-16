@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Papa from 'papaparse';
+import { Tooltip } from 'react-tooltip';
 
 const CSVInput = ({ addDataset }) => {
   const [files, setFiles] = useState([]);
@@ -63,14 +64,40 @@ const CSVInput = ({ addDataset }) => {
   };
 
   return (
-    <div className="flex flex-col items-center p-6 bg-gray-100 rounded-lg shadow-md">
-      <input
-        type="file"
-        accept=".csv"
-        multiple
-        onChange={handleFileChange}
-        className="mb-4 p-2 border border-gray-300 rounded-md"
-      />
+    <div className="flex flex-col items-center p-6 bg-gray-100 rounded-lg shadow-md relative">
+      <div className="flex items-center mb-4">
+        <input
+          type="file"
+          accept=".csv"
+          multiple
+          onChange={handleFileChange}
+          className="p-2 border border-gray-300 rounded-md"
+        />
+        <div className="ml-2 relative flex items-center">
+          <span
+            data-tooltip-id="upload-tooltip"
+            className="flex items-center justify-center w-6 h-6 bg-blue-500 text-white rounded-full cursor-pointer hover:bg-blue-600"
+          >
+            i
+          </span>
+          <Tooltip 
+            id="upload-tooltip" 
+            place="right" 
+            type="dark" 
+            effect="solid" 
+            delayHide={500} 
+            delayUpdate={500} 
+            clickable
+          >
+            <p>Upload any number of CSV files to simulate your drone trajectory. </p><p> The CSV file should have <b>timestamp</b>, <b>latitude</b>, and <b>longitude</b> as columns.</p>
+              <p>You can use the below files to get started</p>
+              <ul>
+                <li><a href="/D.csv" download className="text-blue-400 underline">D-letter.csv</a></li>
+                <li><a href="/K.csv" download className="text-blue-400 underline">K-letter.csv</a></li>
+              </ul>
+          </ Tooltip>
+        </div>
+      </div>
       <button
         onClick={handleUpload}
         className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
